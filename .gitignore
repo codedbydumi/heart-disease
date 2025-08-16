@@ -1,0 +1,12 @@
+-e "env/\n.ipynb_checkpoints/\n*.panda\n*.pyc\n__pycache__/" 
+# .gitignore
+
+# Ignore environment folder
+env/
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+# Ignore other unnecessary files
+*.panda
+*.pyc
+__pycache__/
+
