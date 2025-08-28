@@ -1,15 +1,21 @@
 """Test script for data pipeline functionality."""
 
 import sys
+import os
 from pathlib import Path
 
-# Add src to path
-sys.path.append(str(Path(__file__).parent.parent / "src"))
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
-from data.data_loader import HeartDiseaseDataLoader, load_heart_disease_dataset
-from data.validation import DataValidator
-from data.preprocessing import HeartDiseasePreprocessor
-from utils.logger import get_logger
+# Set up environment
+os.chdir(project_root)
+
+# Now import with absolute imports
+from src.data.data_loader import HeartDiseaseDataLoader, load_heart_disease_dataset
+from src.data.validation import DataValidator
+from src.data.preprocessing import HeartDiseasePreprocessor
+from src.utils.logger import get_logger
 
 logger = get_logger("test_data_pipeline")
 
@@ -104,7 +110,8 @@ def test_full_pipeline():
     
     # 3. Preprocess data
     preprocessor = HeartDiseasePreprocessor()
-    (X_train, y_train), (X_test, y_test) = preprocessor.fit_transform(train_df), preprocessor.transform(test_df)
+    (X_train, y_train) = preprocessor.fit_transform(train_df)
+    (X_test, y_test) = (preprocessor.transform(test_df), test_df['target'].values)
     
     logger.info(f"Pipeline complete - Train: {X_train.shape}, Test: {X_test.shape}")
 
@@ -122,4 +129,6 @@ if __name__ == "__main__":
         
     except Exception as e:
         logger.error(f"Test failed: {e}")
+        import traceback
+        traceback.print_exc()
         raise
