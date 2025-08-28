@@ -366,85 +366,140 @@ class HeartDiseaseDataLoader:
                 "validation_size": validation_size,
                 "random_state": random_state,
                 "target_distribution": {
-                "train": train_df['target'].value_counts().to_dict(),
-                "val": val_df['target'].value_counts().to_dict(),
-                "test": test_df['target'].value_counts().to_dict()
-               }
-           }
+                    "train": train_df['target'].value_counts().to_dict(),
+                    "val": val_df['target'].value_counts().to_dict(),
+                    "test": test_df['target'].value_counts().to_dict()
+                }
+            }
+            
             save_json(split_info, data_dir / "split_info.json")
             logger.info("Data splits saved to processed directory")
-       
+        
         return train_df, test_df, val_df
     
     def get_sample_data(self, n_samples: int = 5) -> pd.DataFrame:
-       """Get sample data for testing and demonstration."""
-       sample_data = pd.DataFrame({
-           'age': [63, 37, 41, 56, 57],
-           'sex': [1, 1, 0, 1, 0],
-           'cp': [3, 2, 1, 1, 0],
-           'trestbps': [145, 130, 130, 120, 120],
-           'chol': [233, 250, 204, 236, 354],
-           'fbs': [1, 0, 0, 0, 0],
-           'restecg': [0, 1, 0, 1, 1],
-           'thalach': [150, 187, 172, 178, 163],
-           'exang': [0, 0, 0, 0, 1],
-           'oldpeak': [2.3, 3.5, 1.4, 0.8, 0.6],
-           'slope': [0, 0, 2, 2, 2],
-           'ca': [0, 0, 0, 0, 0],
-           'thal': [1, 2, 2, 2, 2],
-           'target': [1, 1, 1, 1, 1]
-       })
-       
-       return sample_data.head(n_samples)
+        """Get sample data for testing and demonstration."""
+        np.random.seed(42)  # For reproducible results
+        
+        # Generate realistic heart disease data
+        data = []
+        for i in range(n_samples):
+            # Generate correlated features that make medical sense
+            age = np.random.randint(30, 80)
+            sex = np.random.choice([0, 1])
+            
+            # Chest pain type (higher values = more concerning)
+            cp = np.random.choice([0, 1, 2, 3], p=[0.4, 0.3, 0.2, 0.1])
+            
+            # Blood pressure (age-correlated)
+            trestbps = np.random.randint(90, 200) + (age - 50) // 5
+            trestbps = max(80, min(250, trestbps))
+            
+            # Cholesterol (age and lifestyle correlated)
+            chol = np.random.randint(150, 400) + (age - 40) // 3
+            chol = max(100, min(600, chol))
+            
+            # Fasting blood sugar
+            fbs = np.random.choice([0, 1], p=[0.85, 0.15])
+            
+            # Rest ECG
+            restecg = np.random.choice([0, 1, 2], p=[0.6, 0.3, 0.1])
+            
+            # Max heart rate (inversely correlated with age)
+            thalach = np.random.randint(100, 200) - (age - 30) // 2
+            thalach = max(60, min(220, thalach))
+            
+            # Exercise induced angina
+            exang = np.random.choice([0, 1], p=[0.7, 0.3])
+            
+            # ST depression
+            oldpeak = np.random.exponential(1.0)
+            oldpeak = min(10.0, oldpeak)
+            
+            # Slope
+            slope = np.random.choice([0, 1, 2], p=[0.3, 0.5, 0.2])
+            
+            # Major vessels
+            ca = np.random.choice([0, 1, 2, 3, 4], p=[0.5, 0.25, 0.15, 0.08, 0.02])
+            
+            # Thalassemia
+            thal = np.random.choice([1, 2, 3], p=[0.6, 0.2, 0.2])
+            
+            # Target (heart disease) - based on risk factors
+            risk_score = (
+                (age > 55) * 2 +
+                (sex == 1) * 1 +  # Male higher risk
+                (cp > 1) * 2 +
+                (trestbps > 140) * 1 +
+                (chol > 240) * 1 +
+                (fbs == 1) * 1 +
+                (exang == 1) * 2 +
+                (oldpeak > 2.0) * 2 +
+                (ca > 0) * 3 +
+                (thal == 3) * 2
+            )
+            
+            # Convert risk score to probability
+            target_prob = 1 / (1 + np.exp(-(risk_score - 8) / 2))
+            target = np.random.binomial(1, target_prob)
+            
+            data.append([age, sex, cp, trestbps, chol, fbs, restecg, thalach, exang, oldpeak, slope, ca, thal, target])
+        
+        sample_data = pd.DataFrame(data, columns=[
+            'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 
+            'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'target'
+        ])
+        
+        return sample_data
 
 
 def load_heart_disease_dataset(
-   file_path: Optional[Union[str, Path]] = None,
-   from_database: bool = False,
-   validate: bool = True
+    file_path: Optional[Union[str, Path]] = None,
+    from_database: bool = False,
+    validate: bool = True
 ) -> Tuple[pd.DataFrame, Dict[str, Any]]:
-   """
-   Convenience function to load heart disease dataset.
-   
-   Args:
-       file_path: Path to CSV file (if loading from file)
-       from_database: Whether to load from database
-       validate: Whether to validate data
-       
-   Returns:
-       Tuple of (dataframe, loading_report)
-   """
-   loader = HeartDiseaseDataLoader()
-   
-   if from_database:
-       df = loader.load_from_database()
-       # Remove database metadata columns for ML use
-       feature_columns = [col for col in df.columns if col not in ['id', 'created_at', 'data_source']]
-       df = df[feature_columns]
-       
-       report = {
-           "source": "database",
-           "total_records": len(df),
-           "columns": list(df.columns)
-       }
-       
-       if validate:
-           _, validation_results = loader.validator.validate_dataframe(df)
-           report["validation_results"] = validation_results
-       
-       return df, report
-   
-   elif file_path:
-       return loader.load_csv_data(file_path, validate=validate)
-   
-   else:
-       # Return sample data
-       df = loader.get_sample_data(n_samples=100)  # Generate more sample data
-       report = {
-           "source": "sample",
-           "total_records": len(df),
-           "columns": list(df.columns),
-           "note": "Using generated sample data"
-       }
-       
-       return df, report
+    """
+    Convenience function to load heart disease dataset.
+    
+    Args:
+        file_path: Path to CSV file (if loading from file)
+        from_database: Whether to load from database
+        validate: Whether to validate data
+        
+    Returns:
+        Tuple of (dataframe, loading_report)
+    """
+    loader = HeartDiseaseDataLoader()
+    
+    if from_database:
+        df = loader.load_from_database()
+        # Remove database metadata columns for ML use
+        feature_columns = [col for col in df.columns if col not in ['id', 'created_at', 'data_source']]
+        df = df[feature_columns]
+        
+        report = {
+            "source": "database",
+            "total_records": len(df),
+            "columns": list(df.columns)
+        }
+        
+        if validate:
+            _, validation_results = loader.validator.validate_dataframe(df)
+            report["validation_results"] = validation_results
+        
+        return df, report
+    
+    elif file_path:
+        return loader.load_csv_data(file_path, validate=validate)
+    
+    else:
+        # Return sample data
+        df = loader.get_sample_data(n_samples=100)  # Generate more sample data
+        report = {
+            "source": "sample",
+            "total_records": len(df),
+            "columns": list(df.columns),
+            "note": "Using generated sample data"
+        }
+        
+        return df, report
