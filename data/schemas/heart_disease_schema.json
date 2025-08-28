@@ -1,0 +1,152 @@
+{
+  "name": "heart_disease_dataset",
+  "version": "1.0.0",
+  "description": "Schema for heart disease prediction dataset",
+  "features": {
+    "age": {
+      "type": "integer",
+      "description": "Age of the patient in years",
+      "min_value": 18,
+      "max_value": 120,
+      "required": true
+    },
+    "sex": {
+      "type": "integer",
+      "description": "Gender (1 = male, 0 = female)",
+      "allowed_values": [0, 1],
+      "required": true
+    },
+    "cp": {
+      "type": "integer", 
+      "description": "Chest pain type (0-3)",
+      "min_value": 0,
+      "max_value": 3,
+      "required": true
+    },
+    "trestbps": {
+      "type": "integer",
+      "description": "Resting blood pressure (mm Hg)",
+      "min_value": 80,
+      "max_value": 250,
+      "required": true
+    },
+    "chol": {
+      "type": "integer",
+      "description": "Serum cholesterol in mg/dl",
+      "min_value": 100,
+      "max_value": 600,
+      "required": true
+    },
+    "fbs": {
+      "type": "integer",
+      "description": "Fasting blood sugar > 120 mg/dl (1 = true, 0 = false)",
+      "allowed_values": [0, 1],
+      "required": true
+    },
+    "restecg": {
+      "type": "integer",
+      "description": "Resting electrocardiographic results (0-2)",
+      "min_value": 0,
+      "max_value": 2,
+      "required": true
+    },
+    "thalach": {
+      "type": "integer",
+      "description": "Maximum heart rate achieved",
+      "min_value": 60,
+      "max_value": 220,
+      "required": true
+    },
+    "exang": {
+      "type": "integer",
+      "description": "Exercise induced angina (1 = yes, 0 = no)",
+      "allowed_values": [0, 1],
+      "required": true
+    },
+    "oldpeak": {
+      "type": "float",
+      "description": "ST depression induced by exercise relative to rest",
+      "min_value": 0.0,
+      "max_value": 10.0,
+      "required": true
+    },
+    "slope": {
+      "type": "integer",
+      "description": "Slope of peak exercise ST segment (0-2)",
+      "min_value": 0,
+      "max_value": 2,
+      "required": true
+    },
+    "ca": {
+      "type": "integer",
+      "description": "Number of major vessels colored by fluoroscopy (0-4)",
+      "min_value": 0,
+      "max_value": 4,
+      "required": true
+    },
+    "thal": {
+      "type": "integer",
+      "description": "Thalassemia (1 = normal, 2 = fixed defect, 3 = reversible defect)",
+      "allowed_values": [1, 2, 3],
+      "required": true
+    },
+    "target": {
+      "type": "integer",
+      "description": "Heart disease presence (1 = disease, 0 = no disease)",
+      "allowed_values": [0, 1],
+      "required": true
+    }
+  },
+  "medical_mappings": {
+    "chest_pain_types": {
+      "0": "Typical angina",
+      "1": "Atypical angina", 
+      "2": "Non-anginal pain",
+      "3": "Asymptomatic"
+    },
+    "sex_mapping": {
+      "0": "Female",
+      "1": "Male"
+    },
+    "fbs_mapping": {
+      "0": "Fasting blood sugar <= 120 mg/dl",
+      "1": "Fasting blood sugar > 120 mg/dl"
+    },
+    "restecg_mapping": {
+      "0": "Normal",
+      "1": "ST-T wave abnormality",
+      "2": "Left ventricular hypertrophy"
+    },
+    "exang_mapping": {
+      "0": "No exercise induced angina",
+      "1": "Exercise induced angina"
+    },
+    "slope_mapping": {
+      "0": "Upsloping",
+      "1": "Flat",
+      "2": "Downsloping"
+    },
+    "thal_mapping": {
+      "1": "Normal",
+      "2": "Fixed defect",
+      "3": "Reversible defect"
+    }
+  },
+  "risk_categories": {
+    "low_risk": {
+      "threshold": 0.3,
+      "description": "Low risk of heart disease",
+      "color": "#28a745"
+    },
+    "medium_risk": {
+      "threshold": 0.7,
+      "description": "Medium risk of heart disease", 
+      "color": "#ffc107"
+    },
+    "high_risk": {
+      "threshold": 1.0,
+      "description": "High risk of heart disease",
+      "color": "#dc3545"
+    }
+  }
+}
