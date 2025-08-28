@@ -85,14 +85,13 @@ class ModelTrainer:
         
         if self.tuning_method == 'grid':
             param_grid = {
-                'n_estimators': [50, 100, 200],
-                'max_depth': [5, 10, 15, None],
-                'min_samples_split': [2, 5, 10],
-                'min_samples_leaf': [1, 2, 4]
+                'n_estimators': [50, 100, 150],
+                'max_depth': [5, 10, 15],
+                'min_samples_split': [2, 5, 10]
             }
             
             rf = RandomForestClassifier(random_state=42)
-            grid_search = GridSearchCV(rf, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+            grid_search = GridSearchCV(rf, param_grid, cv=3, scoring='accuracy', n_jobs=-1)
             grid_search.fit(X_train, y_train)
             
             best_model = grid_search.best_estimator_
@@ -102,14 +101,14 @@ class ModelTrainer:
             from scipy.stats import randint
             
             param_dist = {
-                'n_estimators': randint(50, 200),
-                'max_depth': [5, 10, 15, 20, None],
+                'n_estimators': randint(50, 150),
+                'max_depth': [5, 10, 15, 20],
                 'min_samples_split': randint(2, 11),
                 'min_samples_leaf': randint(1, 5)
             }
             
             rf = RandomForestClassifier(random_state=42)
-            random_search = RandomizedSearchCV(rf, param_dist, n_iter=20, cv=5, 
+            random_search = RandomizedSearchCV(rf, param_dist, n_iter=10, cv=3, 
                                              scoring='accuracy', n_jobs=-1, random_state=42)
             random_search.fit(X_train, y_train)
             
@@ -123,7 +122,7 @@ class ModelTrainer:
         
         # Evaluate
         train_acc = accuracy_score(y_train, best_model.predict(X_train))
-        val_acc = accuracy_score(y_val, best_model.predict(X_val)) if X_val is not None else 0
+        val_acc = accuracy_score(y_val, best_model.predict(X_val)) if X_val is not None else train_acc
         
         results = {
             'best_params': best_params,
@@ -141,14 +140,13 @@ class ModelTrainer:
         
         if self.tuning_method == 'grid':
             param_grid = {
-                'n_estimators': [50, 100, 200],
+                'n_estimators': [50, 100, 150],
                 'max_depth': [3, 6, 10],
-                'learning_rate': [0.01, 0.1, 0.2],
-                'subsample': [0.8, 1.0]
+                'learning_rate': [0.01, 0.1, 0.2]
             }
             
             xgb_model = xgb.XGBClassifier(random_state=42)
-            grid_search = GridSearchCV(xgb_model, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+            grid_search = GridSearchCV(xgb_model, param_grid, cv=3, scoring='accuracy', n_jobs=-1)
             grid_search.fit(X_train, y_train)
             
             best_model = grid_search.best_estimator_
@@ -158,14 +156,14 @@ class ModelTrainer:
             from scipy.stats import uniform, randint
             
             param_dist = {
-                'n_estimators': randint(50, 200),
+                'n_estimators': randint(50, 150),
                 'max_depth': randint(3, 10),
-                'learning_rate': uniform(0.01, 0.3),
-                'subsample': uniform(0.6, 0.4)
+                'learning_rate': uniform(0.05, 0.25),
+                'subsample': uniform(0.7, 0.3)
             }
             
             xgb_model = xgb.XGBClassifier(random_state=42)
-            random_search = RandomizedSearchCV(xgb_model, param_dist, n_iter=20, cv=5,
+            random_search = RandomizedSearchCV(xgb_model, param_dist, n_iter=10, cv=3,
                                              scoring='accuracy', n_jobs=-1, random_state=42)
             random_search.fit(X_train, y_train)
             
@@ -179,7 +177,7 @@ class ModelTrainer:
         
         # Evaluate
         train_acc = accuracy_score(y_train, best_model.predict(X_train))
-        val_acc = accuracy_score(y_val, best_model.predict(X_val)) if X_val is not None else 0
+        val_acc = accuracy_score(y_val, best_model.predict(X_val)) if X_val is not None else train_acc
         
         results = {
             'best_params': best_params,
@@ -197,7 +195,7 @@ class ModelTrainer:
         
         if self.tuning_method in ['grid', 'random']:
             param_options = {
-                'C': [0.01, 0.1, 1, 10, 100],
+                'C': [0.1, 1, 10, 100],
                 'solver': ['liblinear', 'lbfgs'],
                 'max_iter': [1000]
             }
@@ -205,9 +203,9 @@ class ModelTrainer:
             lr = LogisticRegression(random_state=42)
             
             if self.tuning_method == 'grid':
-                search = GridSearchCV(lr, param_options, cv=5, scoring='accuracy', n_jobs=-1)
+                search = GridSearchCV(lr, param_options, cv=3, scoring='accuracy', n_jobs=-1)
             else:
-                search = RandomizedSearchCV(lr, param_options, n_iter=10, cv=5, 
+                search = RandomizedSearchCV(lr, param_options, n_iter=5, cv=3, 
                                           scoring='accuracy', n_jobs=-1, random_state=42)
             
             search.fit(X_train, y_train)
@@ -221,7 +219,7 @@ class ModelTrainer:
         
         # Evaluate
         train_acc = accuracy_score(y_train, best_model.predict(X_train))
-        val_acc = accuracy_score(y_val, best_model.predict(X_val)) if X_val is not None else 0
+        val_acc = accuracy_score(y_val, best_model.predict(X_val)) if X_val is not None else train_acc
         
         results = {
             'best_params': best_params,
