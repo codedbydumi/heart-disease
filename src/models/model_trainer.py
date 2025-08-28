@@ -1,278 +1,278 @@
-"""Professional model training pipeline with hyperparameter tuning."""
+"""Enhanced Intermediate Model Training with Hyperparameter Tuning."""
 
-from typing import Dict, Any, List, Optional, Tuple, Union
+from typing import Dict, Any, Optional, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.metrics import make_scorer
-import optuna
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+import xgboost as xgb
+from sklearn.metrics import accuracy_score, classification_report
 from loguru import logger
 
-from .ensemble_model import HeartDiseaseEnsemble
 from ..config import settings
-from ..utils.helpers import save_json, load_json
+from ..utils.helpers import save_json, save_pickle
 
 
 class ModelTrainer:
-    """Professional model training with hyperparameter optimization."""
+    """Enhanced Intermediate Model Training with Hyperparameter Optimization."""
     
-    def __init__(self, 
-                 optimization_method: str = 'optuna',
-                 n_trials: int = 100,
-                 cv_folds: int = 5):
+    def __init__(self, tuning_method: str = 'random'):
         """
         Initialize model trainer.
         
         Args:
-            optimization_method: 'optuna', 'grid', or 'random'
-            n_trials: Number of optimization trials
-            cv_folds: Cross-validation folds
+            tuning_method: 'random', 'grid', or 'none'
         """
-        self.optimization_method = optimization_method
-        self.n_trials = n_trials
-        self.cv_folds = cv_folds
+        self.tuning_method = tuning_method
         self.best_params = {}
-        self.optimization_history = {}
+        self.models = {}
+        self.best_model = None
         
-        logger.info(f"ModelTrainer initialized with {optimization_method} optimization")
+        logger.info(f"ModelTrainer initialized with {tuning_method} search")
     
-    def train_ensemble_model(self, 
-                           X_train: np.ndarray, 
-                           y_train: np.ndarray,
-                           X_val: Optional[np.ndarray] = None,
-                           y_val: Optional[np.ndarray] = None,
-                           optimize_hyperparams: bool = True) -> HeartDiseaseEnsemble:
-        """
-        Train ensemble model with optional hyperparameter optimization.
+    def train_ensemble(self, X_train: np.ndarray, y_train: np.ndarray,
+                      X_val: Optional[np.ndarray] = None, 
+                      y_val: Optional[np.ndarray] = None) -> Dict[str, Any]:
+        """Train ensemble with hyperparameter tuning."""
         
-        Args:
-            X_train: Training features
-            y_train: Training targets
-            X_val: Validation features (optional)
-            y_val: Validation targets (optional)
-            optimize_hyperparams: Whether to optimize hyperparameters
-            
-        Returns:
-            Trained ensemble model
-        """
-        logger.info("Starting ensemble model training...")
+        results = {
+            'individual_models': {},
+            'ensemble_performance': {},
+            'best_model_name': None
+        }
         
-        if optimize_hyperparams:
-            logger.info("Optimizing hyperparameters...")
-            best_params = self._optimize_hyperparameters(X_train, y_train)
-            model = HeartDiseaseEnsemble(
-                rf_params=best_params.get('rf_params'),
-                xgb_params=best_params.get('xgb_params'),
-                lr_params=best_params.get('lr_params')
-            )
-        else:
-            model = HeartDiseaseEnsemble()
+        # Train individual models with tuning
+        logger.info("Training individual models...")
         
-        # Train the model
-        training_results = model.fit(X_train, y_train)
+        # 1. Random Forest
+        rf_model, rf_results = self._train_random_forest(X_train, y_train, X_val, y_val)
+        self.models['random_forest'] = rf_model
+        results['individual_models']['random_forest'] = rf_results
         
-        # Evaluate on validation set if provided
-        if X_val is not None and y_val is not None:
-            val_metrics = model.evaluate(X_val, y_val)
-            training_results['validation_metrics'] = val_metrics
-            logger.info(f"Validation Accuracy: {val_metrics['accuracy']:.4f}")
+        # 2. XGBoost  
+        xgb_model, xgb_results = self._train_xgboost(X_train, y_train, X_val, y_val)
+        self.models['xgboost'] = xgb_model
+        results['individual_models']['xgboost'] = xgb_results
         
-        # Save training results
-        self._save_training_results(training_results, model)
+        # 3. Logistic Regression
+        lr_model, lr_results = self._train_logistic_regression(X_train, y_train, X_val, y_val)
+        self.models['logistic_regression'] = lr_model
+        results['individual_models']['logistic_regression'] = lr_results
         
-        logger.info("Ensemble model training completed")
+        # Select best model
+        best_score = 0
+        best_name = 'random_forest'
         
-        return model
+        for name, model_results in results['individual_models'].items():
+            if model_results['val_accuracy'] > best_score:
+                best_score = model_results['val_accuracy']
+                best_name = name
+        
+        self.best_model = self.models[best_name]
+        results['best_model_name'] = best_name
+        results['best_score'] = best_score
+        
+        logger.info(f"Best model: {best_name} with accuracy: {best_score:.4f}")
+        
+        # Save results
+        self._save_training_results(results)
+        
+        return results
     
-    def _optimize_hyperparameters(self, X: np.ndarray, y: np.ndarray) -> Dict[str, Dict]:
-        """Optimize hyperparameters using specified method."""
+    def _train_random_forest(self, X_train, y_train, X_val=None, y_val=None):
+        """Train Random Forest with hyperparameter tuning."""
         
-        if self.optimization_method == 'optuna':
-            return self._optuna_optimization(X, y)
-        elif self.optimization_method == 'grid':
-            return self._grid_search_optimization(X, y)
-        elif self.optimization_method == 'random':
-            return self._random_search_optimization(X, y)
-        else:
-            logger.warning(f"Unknown optimization method: {self.optimization_method}")
-            return {}
-    
-    def _optuna_optimization(self, X: np.ndarray, y: np.ndarray) -> Dict[str, Dict]:
-        """Optimize hyperparameters using Optuna."""
-        
-        def objective(trial):
-            # Random Forest parameters
-            rf_params = {
-                'n_estimators': trial.suggest_int('rf_n_estimators', 50, 200),
-                'max_depth': trial.suggest_int('rf_max_depth', 5, 20),
-                'min_samples_split': trial.suggest_int('rf_min_samples_split', 2, 10),
-                'min_samples_leaf': trial.suggest_int('rf_min_samples_leaf', 1, 5),
-                'random_state': 42
+        if self.tuning_method == 'grid':
+            param_grid = {
+                'n_estimators': [50, 100, 200],
+                'max_depth': [5, 10, 15, None],
+                'min_samples_split': [2, 5, 10],
+                'min_samples_leaf': [1, 2, 4]
             }
             
-            # XGBoost parameters
-            xgb_params = {
-                'n_estimators': trial.suggest_int('xgb_n_estimators', 50, 200),
-                'max_depth': trial.suggest_int('xgb_max_depth', 3, 10),
-                'learning_rate': trial.suggest_float('xgb_learning_rate', 0.01, 0.3),
-                'subsample': trial.suggest_float('xgb_subsample', 0.6, 1.0),
-                'colsample_bytree': trial.suggest_float('xgb_colsample_bytree', 0.6, 1.0),
-                'random_state': 42
+            rf = RandomForestClassifier(random_state=42)
+            grid_search = GridSearchCV(rf, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+            grid_search.fit(X_train, y_train)
+            
+            best_model = grid_search.best_estimator_
+            best_params = grid_search.best_params_
+            
+        elif self.tuning_method == 'random':
+            from scipy.stats import randint
+            
+            param_dist = {
+                'n_estimators': randint(50, 200),
+                'max_depth': [5, 10, 15, 20, None],
+                'min_samples_split': randint(2, 11),
+                'min_samples_leaf': randint(1, 5)
             }
             
-            # Logistic Regression parameters
-            lr_params = {
-                'C': trial.suggest_float('lr_C', 0.01, 10.0, log=True),
-                'random_state': 42,
-                'max_iter': 1000
+            rf = RandomForestClassifier(random_state=42)
+            random_search = RandomizedSearchCV(rf, param_dist, n_iter=20, cv=5, 
+                                             scoring='accuracy', n_jobs=-1, random_state=42)
+            random_search.fit(X_train, y_train)
+            
+            best_model = random_search.best_estimator_
+            best_params = random_search.best_params_
+            
+        else:  # No tuning
+            best_params = {'n_estimators': 100, 'max_depth': 10, 'random_state': 42}
+            best_model = RandomForestClassifier(**best_params)
+            best_model.fit(X_train, y_train)
+        
+        # Evaluate
+        train_acc = accuracy_score(y_train, best_model.predict(X_train))
+        val_acc = accuracy_score(y_val, best_model.predict(X_val)) if X_val is not None else 0
+        
+        results = {
+            'best_params': best_params,
+            'train_accuracy': train_acc,
+            'val_accuracy': val_acc,
+            'feature_importance': best_model.feature_importances_.tolist()
+        }
+        
+        logger.info(f"Random Forest - Train: {train_acc:.4f}, Val: {val_acc:.4f}")
+        
+        return best_model, results
+    
+    def _train_xgboost(self, X_train, y_train, X_val=None, y_val=None):
+        """Train XGBoost with hyperparameter tuning."""
+        
+        if self.tuning_method == 'grid':
+            param_grid = {
+                'n_estimators': [50, 100, 200],
+                'max_depth': [3, 6, 10],
+                'learning_rate': [0.01, 0.1, 0.2],
+                'subsample': [0.8, 1.0]
             }
             
-            # Create and evaluate model
-            model = HeartDiseaseEnsemble(rf_params=rf_params, xgb_params=xgb_params, lr_params=lr_params)
+            xgb_model = xgb.XGBClassifier(random_state=42)
+            grid_search = GridSearchCV(xgb_model, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
+            grid_search.fit(X_train, y_train)
             
-            from sklearn.model_selection import cross_val_score
-            scores = cross_val_score(model, X, y, cv=self.cv_folds, scoring='accuracy')
+            best_model = grid_search.best_estimator_
+            best_params = grid_search.best_params_
             
-            return scores.mean()
+        elif self.tuning_method == 'random':
+            from scipy.stats import uniform, randint
+            
+            param_dist = {
+                'n_estimators': randint(50, 200),
+                'max_depth': randint(3, 10),
+                'learning_rate': uniform(0.01, 0.3),
+                'subsample': uniform(0.6, 0.4)
+            }
+            
+            xgb_model = xgb.XGBClassifier(random_state=42)
+            random_search = RandomizedSearchCV(xgb_model, param_dist, n_iter=20, cv=5,
+                                             scoring='accuracy', n_jobs=-1, random_state=42)
+            random_search.fit(X_train, y_train)
+            
+            best_model = random_search.best_estimator_
+            best_params = random_search.best_params_
+            
+        else:  # No tuning
+            best_params = {'n_estimators': 100, 'max_depth': 6, 'learning_rate': 0.1, 'random_state': 42}
+            best_model = xgb.XGBClassifier(**best_params)
+            best_model.fit(X_train, y_train)
         
-        study = optuna.create_study(direction='maximize')
-        study.optimize(objective, n_trials=self.n_trials)
+        # Evaluate
+        train_acc = accuracy_score(y_train, best_model.predict(X_train))
+        val_acc = accuracy_score(y_val, best_model.predict(X_val)) if X_val is not None else 0
         
-        # Extract best parameters
-        best_trial = study.best_trial
-        best_params = {
-            'rf_params': {k.replace('rf_', ''): v for k, v in best_trial.params.items() if k.startswith('rf_')},
-            'xgb_params': {k.replace('xgb_', ''): v for k, v in best_trial.params.items() if k.startswith('xgb_')},
-            'lr_params': {k.replace('lr_', ''): v for k, v in best_trial.params.items() if k.startswith('lr_')}
+        results = {
+            'best_params': best_params,
+            'train_accuracy': train_acc,
+            'val_accuracy': val_acc,
+            'feature_importance': best_model.feature_importances_.tolist()
         }
         
-        # Add random state
-        best_params['rf_params']['random_state'] = 42
-        best_params['xgb_params']['random_state'] = 42
-        best_params['lr_params']['random_state'] = 42
-        best_params['lr_params']['max_iter'] = 1000
+        logger.info(f"XGBoost - Train: {train_acc:.4f}, Val: {val_acc:.4f}")
         
-        self.optimization_history = {
-            'method': 'optuna',
-            'n_trials': self.n_trials,
-            'best_score': study.best_value,
-            'best_params': best_params
-        }
-        
-        logger.info(f"Optuna optimization completed. Best score: {study.best_value:.4f}")
-        
-        return best_params
+        return best_model, results
     
-    def _grid_search_optimization(self, X: np.ndarray, y: np.ndarray) -> Dict[str, Dict]:
-        """Optimize hyperparameters using GridSearchCV."""
-        from sklearn.ensemble import RandomForestClassifier
+    def _train_logistic_regression(self, X_train, y_train, X_val=None, y_val=None):
+        """Train Logistic Regression with hyperparameter tuning."""
         
-        param_grid = {
-            'n_estimators': [50, 100, 150],
-            'max_depth': [5, 10, 15],
-            'min_samples_split': [2, 5, 10]
+        if self.tuning_method in ['grid', 'random']:
+            param_options = {
+                'C': [0.01, 0.1, 1, 10, 100],
+                'solver': ['liblinear', 'lbfgs'],
+                'max_iter': [1000]
+            }
+            
+            lr = LogisticRegression(random_state=42)
+            
+            if self.tuning_method == 'grid':
+                search = GridSearchCV(lr, param_options, cv=5, scoring='accuracy', n_jobs=-1)
+            else:
+                search = RandomizedSearchCV(lr, param_options, n_iter=10, cv=5, 
+                                          scoring='accuracy', n_jobs=-1, random_state=42)
+            
+            search.fit(X_train, y_train)
+            best_model = search.best_estimator_
+            best_params = search.best_params_
+            
+        else:  # No tuning
+            best_params = {'C': 1, 'solver': 'lbfgs', 'max_iter': 1000, 'random_state': 42}
+            best_model = LogisticRegression(**best_params)
+            best_model.fit(X_train, y_train)
+        
+        # Evaluate
+        train_acc = accuracy_score(y_train, best_model.predict(X_train))
+        val_acc = accuracy_score(y_val, best_model.predict(X_val)) if X_val is not None else 0
+        
+        results = {
+            'best_params': best_params,
+            'train_accuracy': train_acc,
+            'val_accuracy': val_acc,
+            'feature_importance': np.abs(best_model.coef_[0]).tolist()
         }
         
-        rf = RandomForestClassifier(random_state=42)
-        grid_search = GridSearchCV(rf, param_grid, cv=self.cv_folds, scoring='accuracy', n_jobs=-1)
-        grid_search.fit(X, y)
+        logger.info(f"Logistic Regression - Train: {train_acc:.4f}, Val: {val_acc:.4f}")
         
-        best_params = {
-            'rf_params': grid_search.best_params_,
-            'xgb_params': {'random_state': 42},  # Use defaults for other models
-            'lr_params': {'random_state': 42}
-        }
-        
-        self.optimization_history = {
-            'method': 'grid_search',
-            'best_score': grid_search.best_score_,
-            'best_params': best_params
-        }
-        
-        return best_params
+        return best_model, results
     
-    def _random_search_optimization(self, X: np.ndarray, y: np.ndarray) -> Dict[str, Dict]:
-        """Optimize hyperparameters using RandomizedSearchCV."""
-        from sklearn.ensemble import RandomForestClassifier
-        from scipy.stats import randint
-        
-        param_dist = {
-            'n_estimators': randint(50, 200),
-            'max_depth': randint(5, 20),
-            'min_samples_split': randint(2, 10),
-            'min_samples_leaf': randint(1, 5)
-        }
-        
-        rf = RandomForestClassifier(random_state=42)
-        random_search = RandomizedSearchCV(rf, param_dist, n_iter=self.n_trials, 
-                                         cv=self.cv_folds, scoring='accuracy', n_jobs=-1, random_state=42)
-        random_search.fit(X, y)
-        
-        best_params = {
-            'rf_params': random_search.best_params_,
-            'xgb_params': {'random_state': 42},
-            'lr_params': {'random_state': 42}
-        }
-        
-        self.optimization_history = {
-            'method': 'random_search',
-            'best_score': random_search.best_score_,
-            'best_params': best_params
-        }
-        
-        return best_params
+    def predict(self, X):
+        """Make predictions using best model."""
+        if self.best_model is None:
+            raise ValueError("Must train model first")
+        return self.best_model.predict(X)
     
-    def _save_training_results(self, training_results: Dict, model: HeartDiseaseEnsemble) -> None:
-        """Save training results and model metadata."""
+    def predict_proba(self, X):
+        """Get prediction probabilities."""
+        if self.best_model is None:
+            raise ValueError("Must train model first")
+        return self.best_model.predict_proba(X)
+    
+    def save_model(self, file_path: Optional[str] = None):
+        """Save the best trained model."""
+        if file_path is None:
+            file_path = settings.models_dir / "trained_models" / "best_heart_disease_model.pkl"
+        
+        model_data = {
+            'best_model': self.best_model,
+            'all_models': self.models,
+            'tuning_method': self.tuning_method,
+            'best_params': self.best_params
+        }
+        
+        save_pickle(model_data, file_path)
+        logger.info(f"Models saved to {file_path}")
+        
+        return str(file_path)
+    
+    def _save_training_results(self, results):
+        """Save training results."""
         metadata_dir = settings.models_dir / "metadata"
         metadata_dir.mkdir(exist_ok=True)
         
         training_metadata = {
-            'model_name': model.model_name,
-            'training_timestamp': pd.Timestamp.now().isoformat(),
-            'optimization_method': self.optimization_method,
-            'optimization_history': self.optimization_history,
-            'training_results': training_results,
-            'model_metadata': model.model_metadata
+            'timestamp': pd.Timestamp.now().isoformat(),
+            'tuning_method': self.tuning_method,
+            'results': results
         }
         
-        save_json(training_metadata, metadata_dir / f"{model.model_name}_training_metadata.json")
+        save_json(training_metadata, metadata_dir / "training_results.json")
         logger.info("Training metadata saved")
-    
-    def get_training_summary(self) -> Dict[str, Any]:
-        """Get summary of training process."""
-        return {
-            'optimization_method': self.optimization_method,
-            'n_trials': self.n_trials,
-            'cv_folds': self.cv_folds,
-            'optimization_history': self.optimization_history
-        }
-
-
-def train_heart_disease_model(X_train: np.ndarray, 
-                            y_train: np.ndarray,
-                            X_val: Optional[np.ndarray] = None,
-                            y_val: Optional[np.ndarray] = None,
-                            optimize_hyperparams: bool = True,
-                            optimization_method: str = 'optuna') -> HeartDiseaseEnsemble:
-    """
-    Convenience function to train heart disease prediction model.
-    
-    Args:
-        X_train: Training features
-        y_train: Training targets
-        X_val: Validation features
-        y_val: Validation targets
-        optimize_hyperparams: Whether to optimize hyperparameters
-        optimization_method: Optimization method to use
-        
-    Returns:
-        Trained ensemble model
-    """
-    trainer = ModelTrainer(optimization_method=optimization_method)
-    
-    model = trainer.train_ensemble_model(
-        X_train, y_train, X_val, y_val, optimize_hyperparams
-    )
-    
-    return model
