@@ -1,4 +1,4 @@
-"""Results display component."""
+"""Results display component - Simplified for compatibility."""
 
 import streamlit as st
 from typing import Dict, Any
@@ -11,9 +11,7 @@ sys.path.insert(0, str(project_root))
 
 from src.dashboard.config import RISK_INTERPRETATION, COLORS
 from src.dashboard.utils import (
-    create_risk_gauge, create_feature_importance_chart, 
-    create_risk_comparison_chart, display_recommendations,
-    export_results_to_csv
+    create_simple_risk_chart, display_recommendations, export_results_to_csv
 )
 
 
@@ -75,52 +73,38 @@ def render_prediction_results(
             delta=risk_category.title()
         )
     
-    # Visualizations
+    # Simple risk visualization
     st.markdown("---")
-    st.markdown("### 📊 Risk Assessment Visualization")
+    st.markdown("### 📊 Risk Assessment")
     
-    # Create visualization columns
-    viz_col1, viz_col2 = st.columns(2)
-    
-    with viz_col1:
-        # Risk gauge chart
-        gauge_fig = create_risk_gauge(
+    try:
+        # Try to create the chart
+        risk_chart = create_simple_risk_chart(
             prediction_result["risk_percentage"], 
             risk_category
         )
-        st.plotly_chart(gauge_fig, use_container_width=True)
-    
-    with viz_col2:
-        # Risk comparison chart
-        comparison_fig = create_risk_comparison_chart(
-            prediction_result["risk_percentage"]
-        )
-        st.plotly_chart(comparison_fig, use_container_width=True)
-    
-    # Feature importance if available
-    if prediction_result.get("interpretation"):
-        st.markdown("### 🔍 Key Risk Factors")
-        importance_fig = create_feature_importance_chart(
-            prediction_result["interpretation"]
-        )
-        st.plotly_chart(importance_fig, use_container_width=True)
+        st.plotly_chart(risk_chart, use_container_width=True)
+    except Exception as e:
+        # Fallback to simple progress bar
+        st.markdown("#### Risk Level")
+        progress_value = prediction_result["risk_percentage"] / 100
+        st.progress(progress_value)
+        st.markdown(f"**{prediction_result['risk_percentage']:.1f}%** - {risk_category.title()} Risk")
     
     # Medical interpretation
     if prediction_result.get("interpretation"):
         st.markdown("### 🩺 Medical Interpretation")
         
-        interpretation_cols = st.columns(2)
-        interpretations = list(prediction_result["interpretation"].items())
+        interpretation_items = list(prediction_result["interpretation"].items())
         
-        for i, (key, value) in enumerate(interpretations):
-            col = interpretation_cols[i % 2]
-            with col:
-                st.markdown(f"""
-                <div class="medical-card" style="margin-bottom: 1rem;">
-                    <h4 style="color: {COLORS["primary"]};">{key.replace('_', ' ').title()}</h4>
-                    <p style="margin: 0;">{value}</p>
-                </div>
-                """, unsafe_allow_html=True)
+        # Display in a nice format
+        for key, value in interpretation_items:
+            st.markdown(f"""
+            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 0.5rem 0; border-left: 4px solid {COLORS["primary"]};">
+                <h4 style="color: {COLORS["primary"]}; margin: 0 0 0.5rem 0;">{key.replace('_', ' ').title()}</h4>
+                <p style="margin: 0; color: {COLORS["text_primary"]};">{value}</p>
+            </div>
+            """, unsafe_allow_html=True)
     
     # Recommendations
     if prediction_result.get("recommendations"):
@@ -136,14 +120,14 @@ def render_prediction_results(
     export_col1, export_col2 = st.columns(2)
     
     with export_col1:
-        if st.button("📊 Download CSV Report", use_container_width=True):
-            csv_data = export_results_to_csv(patient_data, prediction_result)
-            st.download_button(
-                label="Download CSV",
-                data=csv_data,
-                file_name=f"heart_risk_assessment_{prediction_result['risk_category']}.csv",
-                mime="text/csv"
-            )
+        csv_data = export_results_to_csv(patient_data, prediction_result)
+        st.download_button(
+            label="📊 Download CSV Report",
+            data=csv_data,
+            file_name=f"heart_risk_assessment_{prediction_result['risk_category']}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
     
     with export_col2:
         if st.button("📋 View Detailed Report", use_container_width=True):
