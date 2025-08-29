@@ -3,17 +3,20 @@
 import streamlit as st
 from datetime import datetime
 import sys
+import os
 from pathlib import Path
 
-# Add project root to path
+# Add project root to path and set working directory
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
+os.chdir(project_root)
 
-from .config import DASHBOARD_CONFIG, get_custom_css
-from .utils import make_api_request, convert_form_data_to_api, check_api_health
-from .components.patient_form import render_patient_form
-from .components.results_display import render_prediction_results
-from .pages.batch_processing import render_batch_processing_page
+# Now import with absolute imports
+from src.dashboard.config import DASHBOARD_CONFIG, get_custom_css
+from src.dashboard.utils import make_api_request, convert_form_data_to_api, check_api_health
+from src.dashboard.components.patient_form import render_patient_form
+from src.dashboard.components.results_display import render_prediction_results
+from src.dashboard.pages.batch_processing import render_batch_processing_page
 
 
 def main():
