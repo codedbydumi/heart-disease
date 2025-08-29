@@ -6,6 +6,15 @@ import io
 from typing import List, Dict, Any
 from ..config import API_ENDPOINTS
 from ..utils import make_api_request, convert_form_data_to_api, format_patient_data_for_display
+# Change this:
+from ..config import API_ENDPOINTS
+
+# To this:
+import sys
+from pathlib import Path
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+from src.dashboard.config import API_ENDPOINTS
 
 
 def render_batch_processing_page():
