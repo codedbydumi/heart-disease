@@ -2,8 +2,15 @@
 
 import streamlit as st
 from typing import Dict, Any
-from ..config import RISK_INTERPRETATION, COLORS
-from ..utils import (
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+from src.dashboard.config import RISK_INTERPRETATION, COLORS
+from src.dashboard.utils import (
     create_risk_gauge, create_feature_importance_chart, 
     create_risk_comparison_chart, display_recommendations,
     export_results_to_csv
