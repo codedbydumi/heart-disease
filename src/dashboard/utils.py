@@ -1,4 +1,4 @@
-"""Dashboard utility functions."""
+"""Dashboard utility functions - Plotly Compatible Version."""
 
 import requests
 import pandas as pd
@@ -6,7 +6,14 @@ import plotly.express as px
 import plotly.graph_objects as go
 from typing import Dict, Any, List, Optional, Tuple
 import streamlit as st
-from .config import API_ENDPOINTS, COLORS, FORM_FIELDS
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+from src.dashboard.config import API_ENDPOINTS, COLORS, FORM_FIELDS
 
 
 def make_api_request(endpoint: str, method: str = "GET", data: Optional[Dict] = None) -> Tuple[bool, Any]:
@@ -72,7 +79,7 @@ def convert_form_data_to_api(form_data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def create_risk_gauge(risk_percentage: float, risk_category: str) -> go.Figure:
-    """Create a risk assessment gauge chart."""
+    """Create a risk assessment gauge chart - Fixed for Plotly compatibility."""
     # Determine color based on risk
     if risk_category == "low":
         color = COLORS["low_risk"]
@@ -85,18 +92,18 @@ def create_risk_gauge(risk_percentage: float, risk_category: str) -> go.Figure:
         mode = "gauge+number+delta",
         value = risk_percentage,
         domain = {'x': [0, 1], 'y': [0, 1]},
-        title = {'text': "Heart Disease Risk", 'font': {'size': 20}},
-        delta = {'reference': 50, 'increasing': {'color': COLORS["high_risk"]}},
+        title = {'text': "Heart Disease Risk (%)", 'font': {'size': 18}},
+        delta = {'reference': 30},
         gauge = {
-            'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "darkblue"},
+            'axis': {'range': [None, 100]},
             'bar': {'color': color},
             'bgcolor': "white",
             'borderwidth': 2,
             'bordercolor': "gray",
             'steps': [
-                {'range': [0, 30], 'color': COLORS["low_risk"], 'opacity': 0.3},
-                {'range': [30, 70], 'color': COLORS["medium_risk"], 'opacity': 0.3},
-                {'range': [70, 100], 'color': COLORS["high_risk"], 'opacity': 0.3}
+                {'range': [0, 30], 'color': COLORS["low_risk"]},
+                {'range': [30, 70], 'color': COLORS["medium_risk"]}, 
+                {'range': [70, 100], 'color': COLORS["high_risk"]}
             ],
             'threshold': {
                 'line': {'color': "red", 'width': 4},
@@ -107,10 +114,10 @@ def create_risk_gauge(risk_percentage: float, risk_category: str) -> go.Figure:
     ))
     
     fig.update_layout(
-        height=300,
-        margin=dict(l=20, r=20, t=40, b=20),
-        paper_bgcolor="white",
-        plot_bgcolor="white"
+        height=400,
+        margin=dict(l=50, r=50, t=50, b=50),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)"
     )
     
     return fig
@@ -119,9 +126,15 @@ def create_risk_gauge(risk_percentage: float, risk_category: str) -> go.Figure:
 def create_feature_importance_chart(interpretation: Dict[str, str]) -> go.Figure:
     """Create a feature importance visualization."""
     if not interpretation:
-        return go.Figure()
+        # Return empty figure if no interpretation
+        fig = go.Figure()
+        fig.update_layout(
+            title="No interpretation data available",
+            height=300
+        )
+        return fig
     
-    features = list(interpretation.keys())
+    features = list(interpretation.keys())[:5]  # Limit to top 5
     values = list(range(len(features), 0, -1))  # Descending importance
     
     fig = go.Figure(go.Bar(
@@ -129,7 +142,7 @@ def create_feature_importance_chart(interpretation: Dict[str, str]) -> go.Figure
         y=features,
         orientation='h',
         marker_color=COLORS["primary"],
-        text=list(interpretation.values()),
+        text=[interpretation[f] for f in features],
         textposition="outside"
     ))
     
@@ -138,7 +151,9 @@ def create_feature_importance_chart(interpretation: Dict[str, str]) -> go.Figure
         xaxis_title="Relative Importance",
         height=300,
         margin=dict(l=20, r=20, t=40, b=20),
-        showlegend=False
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)"
     )
     
     return fig
@@ -148,7 +163,7 @@ def create_risk_comparison_chart(patient_risk: float) -> go.Figure:
     """Create a risk comparison chart."""
     population_avg = 15.0  # Example population average
     
-    categories = ['Your Risk', 'Population Average', 'Low Risk Threshold', 'High Risk Threshold']
+    categories = ['Your Risk', 'Population Avg', 'Low Threshold', 'High Threshold']
     values = [patient_risk, population_avg, 30, 70]
     colors = [COLORS["primary"], COLORS["secondary"], COLORS["low_risk"], COLORS["high_risk"]]
     
@@ -163,9 +178,11 @@ def create_risk_comparison_chart(patient_risk: float) -> go.Figure:
     fig.update_layout(
         title="Risk Comparison",
         yaxis_title="Risk Percentage (%)",
-        height=300,
+        height=400,
         margin=dict(l=20, r=20, t=40, b=20),
-        showlegend=False
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)"
     )
     
     return fig
@@ -175,16 +192,19 @@ def display_recommendations(recommendations: List[str], risk_category: str):
     """Display personalized recommendations."""
     if risk_category == "low":
         alert_class = "alert-info"
+        icon = "✅"
     elif risk_category == "medium":
         alert_class = "alert-warning"
+        icon = "⚠️"
     else:
         alert_class = "alert-danger"
+        icon = "🚨"
     
-    st.markdown("### 📋 Personalized Recommendations")
+    st.markdown(f"### 📋 Personalized Recommendations {icon}")
     
-    for i, recommendation in enumerate(recommendations, 1):
+    for i, recommendation in enumerate(recommendations[:6], 1):  # Limit to 6
         st.markdown(f"""
-        <div class="{alert_class}">
+        <div class="{alert_class}" style="margin: 0.5rem 0; padding: 1rem; border-radius: 8px;">
             <strong>{i}.</strong> {recommendation}
         </div>
         """, unsafe_allow_html=True)
@@ -194,7 +214,7 @@ def check_api_health() -> bool:
     """Check if API is healthy and responsive."""
     success, response = make_api_request(API_ENDPOINTS["health"])
     
-    if success and response.get("status") == "healthy":
+    if success and isinstance(response, dict) and response.get("status") == "healthy":
         return True
     return False
 
@@ -203,7 +223,7 @@ def load_sample_data() -> Optional[Dict[str, Any]]:
     """Load sample patient data for testing."""
     success, response = make_api_request(API_ENDPOINTS["sample"])
     
-    if success:
+    if success and isinstance(response, dict):
         return response.get("sample_input")
     return None
 
@@ -263,3 +283,42 @@ def export_results_to_csv(patient_data: Dict, prediction_result: Dict) -> str:
     
     # Convert to CSV string
     return df.to_csv(index=False)
+
+
+def create_simple_risk_chart(risk_percentage: float, risk_category: str) -> go.Figure:
+    """Create a simple risk chart as fallback."""
+    colors = {
+        "low": COLORS["low_risk"],
+        "medium": COLORS["medium_risk"], 
+        "high": COLORS["high_risk"]
+    }
+    
+    fig = go.Figure()
+    
+    # Add risk bar
+    fig.add_trace(go.Bar(
+        x=['Risk Level'],
+        y=[risk_percentage],
+        marker_color=colors.get(risk_category, COLORS["primary"]),
+        text=[f"{risk_percentage:.1f}%"],
+        textposition="outside",
+        name="Your Risk"
+    ))
+    
+    # Add reference lines
+    fig.add_hline(y=30, line_dash="dash", line_color=COLORS["low_risk"], 
+                  annotation_text="Low Risk Threshold")
+    fig.add_hline(y=70, line_dash="dash", line_color=COLORS["high_risk"], 
+                  annotation_text="High Risk Threshold")
+    
+    fig.update_layout(
+        title=f"Heart Disease Risk: {risk_category.title()}",
+        yaxis_title="Risk Percentage (%)",
+        yaxis_range=[0, 100],
+        height=400,
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)"
+    )
+    
+    return fig
