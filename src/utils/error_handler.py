@@ -197,4 +197,209 @@ class ErrorHandler:
                 "details": error_info.get("technical_details"),
                 "field": error_info.get("field"),
                 "medical_guidance": error_info.get("medical_guidance"),
-                "suggested_action": error_info.get("suggested_action
+                "suggested_action": error_info.get("suggested_action"),
+                "retry_possible": error_info.get("retry_possible", False),
+                "retry_delay": error_info.get("retry_delay")
+            },
+            "timestamp": pd.Timestamp.now().isoformat(),
+            "request_path": request_path,
+            "help": {
+                "documentation": "/docs",
+                "support": "Contact system administrator",
+                "retry_guidance": ErrorHandler._get_retry_guidance(error_info)
+            }
+        }
+    
+    @staticmethod
+    def _get_retry_guidance(error_info: Dict[str, Any]) -> str:
+        """Provide guidance on how to retry the request."""
+        action = error_info.get("suggested_action", "")
+        
+        guidance_map = {
+            "check_input_format": "Verify all required medical fields are provided with valid numeric values",
+            "correct_input_values": "Ensure all medical parameters are within realistic ranges",
+            "retry_later": "Wait a few minutes and try your request again",
+            "wait_and_retry": "Wait for the rate limit to reset before making another request",
+            "contact_support": "This error requires administrator assistance",
+            "verify_input": "Double-check your patient data format and values"
+        }
+        
+        return guidance_map.get(action, "Check your input data and try again")
+
+
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Global exception handler for FastAPI with medical context.
+    
+    This handler processes all unhandled exceptions and returns
+    user-friendly error responses with appropriate medical guidance.
+    """
+    logger.error(f"Unhandled exception on {request.url}: {exc}")
+    logger.error(f"Traceback: {traceback.format_exc()}")
+    
+    # Categorize and handle the error
+    error_category = ErrorHandler.categorize_error(exc)
+    
+    if error_category == 'model_error':
+        error_info = ErrorHandler.handle_model_error(exc)
+        status_code = 503  # Service Unavailable
+    elif error_category == 'validation_error':
+        error_info = ErrorHandler.handle_validation_error(exc)
+        status_code = 400  # Bad Request
+    elif error_category == 'connection_error':
+        error_info = ErrorHandler.handle_connection_error(exc)
+        status_code = 503  # Service Unavailable
+    elif error_category == 'api_error':
+        error_info = ErrorHandler.handle_api_error(exc)
+        status_code = getattr(exc, 'status_code', 500)
+    else:
+        error_info = ErrorHandler.handle_unknown_error(exc)
+        status_code = 500  # Internal Server Error
+    
+    # Format the response
+    response_content = ErrorHandler.format_error_response(
+        error_info, 
+        str(request.url.path)
+    )
+    
+    return JSONResponse(
+        status_code=status_code,
+        content=response_content
+    )
+
+
+def handle_dashboard_error(error_context: str = ""):
+    """
+    Decorator for dashboard error handling with medical context.
+    
+    Args:
+        error_context: Context description for better error messages
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                import streamlit as st
+                
+                logger.error(f"Dashboard error in {func.__name__} ({error_context}): {e}")
+                
+                # Categorize error
+                error_category = ErrorHandler.categorize_error(e)
+                
+                if error_category == 'connection_error':
+                    st.error("🚫 Cannot connect to prediction service")
+                    st.info("Please ensure the API server is running:")
+                    st.code("python scripts/start_api.py", language="bash")
+                    
+                elif error_category == 'validation_error':
+                    st.error("❌ Invalid medical data")
+                    error_info = ErrorHandler.handle_validation_error(e)
+                    st.error(error_info.get('user_message', str(e)))
+                    if error_info.get('medical_guidance'):
+                        st.info(f"💡 {error_info['medical_guidance']}")
+                        
+                elif error_category == 'model_error':
+                    st.error("🤖 Prediction model error")
+                    error_info = ErrorHandler.handle_model_error(e)
+                    st.error(error_info.get('user_message', 'Model prediction failed'))
+                    
+                    if not error_info.get('retry_possible', True):
+                        st.warning("Please contact system administrator")
+                        
+                else:
+                    st.error("⚠️ Something went wrong!")
+                    st.error(f"Error: {str(e)}")
+                
+                # Show debug info in development mode
+                if st.session_state.get("debug_mode", False):
+                    with st.expander("🔧 Debug Information"):
+                        st.code(f"Error Type: {type(e).__name__}")
+                        st.code(f"Error Message: {str(e)}")
+                        st.code(f"Function: {func.__name__}")
+                        if error_context:
+                            st.code(f"Context: {error_context}")
+                        
+                return None
+        return wrapper
+    return decorator
+
+
+class StreamlitErrorHandler:
+    """Specialized error handling for Streamlit dashboard."""
+    
+    @staticmethod
+    def show_api_connection_error():
+        """Display API connection error with troubleshooting."""
+        import streamlit as st
+        
+        st.error("🚫 API Connection Failed")
+        
+        with st.expander("🔧 Troubleshooting Steps"):
+            st.markdown("""
+            **Step 1**: Check if API server is running
+            ```bash
+            # In terminal, run:
+            python scripts/start_api.py
+            ```
+            
+            **Step 2**: Verify API health
+            ```bash
+            # Test with curl:
+            curl http://localhost:8000/health
+            ```
+            
+            **Step 3**: Check port conflicts
+            - API should run on port 8000
+            - Dashboard should run on port 8501
+            
+            **Step 4**: Restart both services
+            1. Stop API (Ctrl+C)
+            2. Stop Dashboard (Ctrl+C) 
+            3. Start API first, then Dashboard
+            """)
+    
+    @staticmethod
+    def show_validation_error(error_msg: str, field: str = None):
+        """Display validation error with medical guidance."""
+        import streamlit as st
+        
+        st.error(f"❌ Invalid Input: {error_msg}")
+        
+        # Provide field-specific guidance
+        if field:
+            guidance = {
+                'age': "Age must be between 18-120 years",
+                'trestbps': "Blood pressure: 80-300 mm Hg (normal: 90-140)",  
+                'chol': "Cholesterol: 100-800 mg/dl (normal: <200)",
+                'thalach': "Heart rate: 60-220 bpm (varies by age)",
+                'oldpeak': "ST depression: 0-10 mm (typically 0-4)"
+            }
+            
+            if field in guidance:
+                st.info(f"💡 {guidance[field]}")
+        
+        st.info("Please correct the highlighted values and try again.")
+    
+    @staticmethod
+    def show_prediction_error(risk_percentage: float = None):
+        """Display prediction error with context."""
+        import streamlit as st
+        
+        st.error("🤖 Prediction Failed")
+        
+        if risk_percentage is not None and risk_percentage < 0:
+            st.warning("Received invalid risk score - please check model configuration")
+        
+        st.info("Please try with different patient data or contact support if the issue persists.")
+    
+    @staticmethod
+    def enable_debug_mode():
+        """Enable debug mode for detailed error information."""
+        import streamlit as st
+        
+        if st.sidebar.checkbox("🔧 Debug Mode"):
+            st.session_state.debug_mode = True
+            st.sidebar.success("Debug mode enabled")
+        else:
+            st.session_state.debug_mode = False
