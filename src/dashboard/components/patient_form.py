@@ -1,9 +1,16 @@
 """Patient input form component."""
 
 import streamlit as st
-from typing import Dict, Any, Optional
-from ..config import FORM_FIELDS
-from ..utils import load_sample_data
+from typing import Dict, Any, Optional, List
+import sys
+from pathlib import Path
+
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+from src.dashboard.config import FORM_FIELDS
+from src.dashboard.utils import load_sample_data
 
 
 def render_patient_form() -> Optional[Dict[str, Any]]:
@@ -107,12 +114,12 @@ def render_patient_form() -> Optional[Dict[str, Any]]:
             sample_data = load_sample_data()
             if sample_data:
                 st.success("Sample data loaded! Please refresh to see the values.")
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Failed to load sample data")
         
         if clear_form:
-            st.experimental_rerun()
+            st.rerun()
         
         if submitted:
             # Validate form data
