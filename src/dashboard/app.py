@@ -6,10 +6,13 @@ import sys
 import os
 from pathlib import Path
 
+
+
 # Add project root to path and set working directory
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 os.chdir(project_root)
+
 
 # Now import with absolute imports
 from src.dashboard.config import DASHBOARD_CONFIG, get_custom_css

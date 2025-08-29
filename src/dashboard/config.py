@@ -245,48 +245,12 @@ def get_custom_css() -> str:
         box-shadow: 0 4px 12px rgba(46, 134, 171, 0.3);
     }}
     
-    /* Sidebar styling */
-    .css-1d391kg {{
-        background-color: {COLORS["card_bg"]};
-        border-right: 1px solid #e9ecef;
-    }}
-    
-    /* Metrics styling */
-    .metric-card {{
-        background: {COLORS["card_bg"]};
-        padding: 1.5rem;
-        border-radius: 8px;
-        border-left: 4px solid {COLORS["primary"]};
-        margin: 1rem 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }}
-    
-    /* Form styling */
-    .stSelectbox label, .stSlider label, .stNumberInput label {{
-        font-weight: 500;
-        color: {COLORS["text_primary"]};
-        font-size: 0.95rem;
-    }}
-    
-    /* Progress bar */
-    .stProgress > div > div {{
-        background: linear-gradient(90deg, {COLORS["low_risk"]}, {COLORS["medium_risk"]}, {COLORS["high_risk"]});
-    }}
-    
     /* Hide Streamlit branding */
     #MainMenu {{visibility: hidden;}}
     .stDeployButton {{visibility: hidden;}}
     footer {{visibility: hidden;}}
     
-    /* Medical icon styling */
-    .medical-icon {{
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        display: block;
-        text-align: center;
-    }}
-    
-    /* Alert styling */
+    /* Recommendation styling */
     .alert-info {{
         background-color: #d1ecf1;
         border: 1px solid #bee5eb;
