@@ -4,14 +4,15 @@ import streamlit as st
 import pandas as pd
 import io
 from typing import List, Dict, Any
-from ..config import API_ENDPOINTS
-from ..utils import make_api_request, convert_form_data_to_api, format_patient_data_for_display
-# Change this:
+
+# Fix imports
 import sys
 from pathlib import Path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
+
 from src.dashboard.config import API_ENDPOINTS
+from src.dashboard.utils import make_api_request, convert_form_data_to_api, format_patient_data_for_display
 
 
 def render_batch_processing_page():
@@ -258,24 +259,12 @@ def process_batch_data(df: pd.DataFrame):
     
     risk_dist = summary['risk_distribution']
     
-    # Create risk distribution chart
-    risk_categories = list(risk_dist.keys())
-    risk_counts = list(risk_dist.values())
-    
-    import plotly.express as px
-    
-    fig = px.pie(
-        values=risk_counts,
-        names=risk_categories,
-        title="Risk Category Distribution",
-        color_discrete_map={
-            'low': '#28a745',
-            'medium': '#ffc107',
-            'high': '#dc3545'
-        }
-    )
-    
-    st.plotly_chart(fig, use_container_width=True)
+    # Create simple risk distribution display
+    st.markdown(f"""
+    - **Low Risk:** {risk_dist.get('low', 0)} patients
+    - **Medium Risk:** {risk_dist.get('medium', 0)} patients  
+    - **High Risk:** {risk_dist.get('high', 0)} patients
+    """)
     
     # Detailed results table
     st.markdown("### 📋 Detailed Results")
@@ -292,48 +281,21 @@ def process_batch_data(df: pd.DataFrame):
         results_data.append(patient_result)
     
     results_df = pd.DataFrame(results_data)
-    
-    # Color-code the dataframe
-    def color_risk_category(val):
-        if 'High' in str(val):
-            return 'background-color: #ffebee'
-        elif 'Medium' in str(val):
-            return 'background-color: #fff8e1'
-        elif 'Low' in str(val):
-            return 'background-color: #e8f5e8'
-        return ''
-    
-    styled_df = results_df.style.applymap(color_risk_category, subset=['Category'])
-    st.dataframe(styled_df, use_container_width=True)
+    st.dataframe(results_df, use_container_width=True)
     
     # Export results
     st.markdown("### 📁 Export Results")
     
-    export_col1, export_col2 = st.columns(2)
+    # Prepare detailed export data
+    detailed_export = prepare_detailed_export(df, response['predictions'])
     
-    with export_col1:
-        # Prepare detailed export data
-        detailed_export = prepare_detailed_export(df, response['predictions'])
-        
-        st.download_button(
-            label="📊 Download Detailed Results",
-            data=detailed_export,
-            file_name="batch_heart_risk_results.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-    
-    with export_col2:
-        # Prepare summary export
-        summary_export = prepare_summary_export(summary, results_df)
-        
-        st.download_button(
-            label="📈 Download Summary Report",
-            data=summary_export,
-            file_name="batch_heart_risk_summary.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
+    st.download_button(
+        label="📊 Download Detailed Results",
+        data=detailed_export,
+        file_name="batch_heart_risk_results.csv",
+        mime="text/csv",
+        use_container_width=True
+    )
 
 
 def prepare_detailed_export(original_df: pd.DataFrame, predictions: List[Dict]) -> str:
@@ -357,28 +319,3 @@ def prepare_detailed_export(original_df: pd.DataFrame, predictions: List[Dict]) 
     
     export_df = pd.DataFrame(export_data)
     return export_df.to_csv(index=False)
-
-
-def prepare_summary_export(summary: Dict, results_df: pd.DataFrame) -> str:
-    """Prepare summary export with key statistics."""
-    summary_data = {
-        'Metric': [
-            'Total Patients',
-            'Average Risk %',
-            'Low Risk Count',
-            'Medium Risk Count', 
-            'High Risk Count',
-            'High Risk Percentage'
-        ],
-        'Value': [
-            summary['total_processed'],
-            f"{summary['average_risk']:.1f}%",
-            summary['risk_distribution']['low'],
-            summary['risk_distribution']['medium'],
-            summary['risk_distribution']['high'],
-            f"{summary['high_risk_percentage']:.1f}%"
-        ]
-    }
-    
-    summary_df = pd.DataFrame(summary_data)
-    return summary_df.to_csv(index=False)
