@@ -1,4 +1,4 @@
-"""Results display component - Simplified for compatibility."""
+"""Results display component with Docker support."""
 
 import streamlit as st
 from typing import Dict, Any
@@ -11,31 +11,20 @@ sys.path.insert(0, str(project_root))
 
 from src.dashboard.config import RISK_INTERPRETATION, COLORS
 from src.dashboard.utils import (
-    create_simple_risk_chart, display_recommendations, export_results_to_csv
+    create_simple_risk_chart, create_risk_comparison_chart, display_recommendations, export_results_to_csv
 )
 
 
-def render_prediction_results(
-    patient_data: Dict[str, Any], 
-    prediction_result: Dict[str, Any]
-):
-    """
-    Render prediction results with visualizations.
-    
-    Args:
-        patient_data: Original patient input data
-        prediction_result: API prediction response
-    """
+def render_prediction_results(patient_data: Dict[str, Any], prediction_result: Dict[str, Any]):
+    """Render prediction results with visualizations."""
     risk_category = prediction_result["risk_category"]
     risk_info = RISK_INTERPRETATION[risk_category]
     
     # Main risk assessment card
     st.markdown(f"""
     <div class="medical-card">
-        <div class="medical-icon">{risk_info["icon"]}</div>
-        <h2 style="text-align: center; color: {risk_info["color"]};">
-            {risk_info["title"]}
-        </h2>
+        <div style="text-align: center; font-size: 3rem; margin-bottom: 1rem;">{risk_info["icon"]}</div>
+        <h2 style="text-align: center; color: {risk_info["color"]};">{risk_info["title"]}</h2>
         <h3 style="text-align: center; color: {COLORS["text_primary"]};">
             {prediction_result["risk_percentage"]:.1f}% Risk of Heart Disease
         </h3>
@@ -73,23 +62,43 @@ def render_prediction_results(
             delta=risk_category.title()
         )
     
-    # Simple risk visualization
+    # Risk visualization
     st.markdown("---")
-    st.markdown("### 📊 Risk Assessment")
+    st.markdown("### 📊 Risk Assessment Visualization")
     
-    try:
-        # Try to create the chart
-        risk_chart = create_simple_risk_chart(
-            prediction_result["risk_percentage"], 
-            risk_category
-        )
-        st.plotly_chart(risk_chart, use_container_width=True)
-    except Exception as e:
-        # Fallback to simple progress bar
-        st.markdown("#### Risk Level")
-        progress_value = prediction_result["risk_percentage"] / 100
-        st.progress(progress_value)
-        st.markdown(f"**{prediction_result['risk_percentage']:.1f}%** - {risk_category.title()} Risk")
+    # Create visualization columns
+    viz_col1, viz_col2 = st.columns(2)
+    
+    with viz_col1:
+        try:
+            # Simple risk chart
+            risk_chart = create_simple_risk_chart(
+                prediction_result["risk_percentage"], 
+                risk_category
+            )
+            st.plotly_chart(risk_chart, use_container_width=True)
+        except Exception as e:
+            # Fallback to progress bar
+            st.markdown("#### Risk Level")
+            progress_value = prediction_result["risk_percentage"] / 100
+            st.progress(progress_value)
+            st.markdown(f"**{prediction_result['risk_percentage']:.1f}%** - {risk_category.title()} Risk")
+    
+    with viz_col2:
+        try:
+            # Risk comparison chart
+            comparison_fig = create_risk_comparison_chart(
+                prediction_result["risk_percentage"]
+            )
+            st.plotly_chart(comparison_fig, use_container_width=True)
+        except Exception:
+            st.markdown("#### Risk Comparison")
+            st.markdown(f"""
+            - **Your Risk:** {prediction_result['risk_percentage']:.1f}%
+            - **Population Average:** 15.0%
+            - **Low Risk Threshold:** 30%
+            - **High Risk Threshold:** 70%
+            """)
     
     # Medical interpretation
     if prediction_result.get("interpretation"):
