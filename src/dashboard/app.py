@@ -49,7 +49,7 @@ def main():
             key="page_selection"
         )
         
-        # System Status (clean version)
+        # API status check
         st.markdown("---")
         st.markdown("### 🔧 System Status")
         
@@ -57,11 +57,12 @@ def main():
             st.success("✅ API Connected")
         else:
             st.error("❌ API Disconnected")
+            st.warning("Please ensure the API server is running")
         
-        # Model Information
+        # Model stats
         st.markdown("---")
         st.markdown("### 📈 Model Info")
-        st.info("• Algorithm: Ensemble ML")
+        st.info("• Algorithm: Logistic Regression")
         st.info("• Accuracy: 86.89%")
         st.info("• Features: 20 engineered")
         
@@ -101,10 +102,11 @@ def render_risk_calculator_page():
         # Convert form data to API format
         api_data = convert_form_data_to_api(form_data)
         
-        # Make prediction request
+        # Make prediction request - uses dynamic API URL from config
         with st.spinner("🔬 Analyzing patient data..."):
+            from src.dashboard.config import API_ENDPOINTS
             success, response = make_api_request(
-                "http://localhost:8000/predict",
+                API_ENDPOINTS["predict"],
                 method="POST",
                 data=api_data
             )
@@ -143,9 +145,9 @@ def render_about_page():
         #### 🤖 Machine Learning Model
         - **Algorithm**: Ensemble (Random Forest + XGBoost + Logistic Regression)
         - **Accuracy**: 86.89%
-        - **AUC-ROC**: 95.35%
         - **Features**: 20 engineered features
         - **Training Data**: UCI Heart Disease Dataset (303 patients)
+        - **Performance**: AUC-ROC 95.35%
         """)
     
     with col2:
@@ -190,23 +192,6 @@ def render_about_page():
         </div>
         """, unsafe_allow_html=True)
     
-    # Performance Metrics
-    st.markdown("### 📊 Model Performance")
-    
-    perf_col1, perf_col2, perf_col3, perf_col4 = st.columns(4)
-    
-    with perf_col1:
-        st.metric("Accuracy", "86.89%")
-    
-    with perf_col2:
-        st.metric("AUC-ROC", "95.35%")
-        
-    with perf_col3:
-        st.metric("Precision", "81.25%")
-        
-    with perf_col4:
-        st.metric("Recall", "92.86%")
-    
     # Disclaimer
     st.markdown("---")
     st.markdown("### ⚠️ Important Medical Disclaimer")
@@ -223,20 +208,19 @@ def render_about_page():
     # Technical details
     with st.expander("🔧 Technical Details"):
         st.markdown("""
-        #### System Architecture
-        - **Frontend**: Streamlit with custom medical-themed CSS
-        - **Backend**: FastAPI with async support and Pydantic validation
-        - **ML Pipeline**: scikit-learn ensemble with feature engineering
-        - **Database**: SQLite with proper medical data schema
-        - **Deployment**: Docker containerization for production
+        #### Architecture
+        - **Frontend**: Streamlit with custom CSS styling
+        - **Backend**: FastAPI with Pydantic validation
+        - **ML Pipeline**: scikit-learn with ensemble methods
+        - **Database**: SQLite for data persistence
+        - **Deployment**: Docker containerization
         
-        #### Key Features
-        - Real-time risk assessment with medical interpretations
-        - Batch processing capabilities for multiple patients
-        - Interactive visualizations with risk comparisons
-        - CSV export functionality for detailed reports
-        - Professional medical styling and responsive design
-        - Comprehensive input validation and error handling
+        #### Features
+        - Real-time risk assessment
+        - Batch processing capabilities
+        - Interactive visualizations
+        - Export functionality
+        - Professional medical styling
         """)
 
 

@@ -1,5 +1,5 @@
 {
-  "training_date": "2025-08-30T13:17:43.486861",
+  "training_date": "2025-08-30T20:12:57.526383",
   "best_model": "logistic_regression",
   "cross_validation_results": {
     "random_forest": {

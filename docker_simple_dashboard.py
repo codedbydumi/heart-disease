@@ -166,7 +166,7 @@ def main():
             
         st.markdown("---")
         st.markdown("### 📈 Model Info")
-        st.info("• Algorithm: Ensemble ML")
+        st.info("• Algorithm: Ensem")
         st.info("• Accuracy: 86.89%")
         st.info("• Features: 20 engineered")
         
