@@ -1,10 +1,12 @@
-"""Dashboard configuration and styling."""
+"""Dashboard configuration and styling with Docker support."""
 
-import streamlit as st
+import os
 from typing import Dict, Any
 
-# API Configuration
-API_BASE_URL = "http://localhost:8000"
+# API Configuration with Docker support
+# Uses environment variable for Docker, falls back to localhost for local development
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
+
 API_ENDPOINTS = {
     "health": f"{API_BASE_URL}/health",
     "predict": f"{API_BASE_URL}/predict",
@@ -251,6 +253,14 @@ def get_custom_css() -> str:
     footer {{visibility: hidden;}}
     
     /* Recommendation styling */
+    .recommendation {{
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 0.5rem 0;
+        border-left: 4px solid {COLORS["primary"]};
+    }}
+    
     .alert-info {{
         background-color: #d1ecf1;
         border: 1px solid #bee5eb;
@@ -279,3 +289,12 @@ def get_custom_css() -> str:
     }}
     </style>
     """
+
+# Debug info for development
+def get_debug_info():
+    """Get debug information about the current configuration."""
+    return {
+        "api_base_url": API_BASE_URL,
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "docker_mode": "API_BASE_URL" in os.environ
+    }
