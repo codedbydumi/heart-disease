@@ -1,4 +1,7 @@
-# Core Data Science & ML
+# Add this line to fix the Pydantic settings issue
+pydantic-settings>=2.0.0
+
+# Your existing requirements stay the same
 pandas>=1.5.0
 numpy>=1.21.0
 scikit-learn>=1.1.0
@@ -6,34 +9,17 @@ xgboost>=1.6.0
 matplotlib>=3.5.0
 seaborn>=0.11.0
 plotly>=5.10.0
-
-# Model Interpretation
 shap>=0.41.0
-
-# Web Framework & API
 fastapi>=0.85.0
 uvicorn[standard]>=0.18.0
 streamlit>=1.15.0
 pydantic>=1.10.0
-
-# Data Validation
 jsonschema>=4.0.0
-
-# Utilities
 python-dotenv>=0.19.0
 loguru>=0.6.0
 requests>=2.28.0
-
-# Development & Testing
 pytest>=7.0.0
 pytest-cov>=4.0.0
 black>=22.0.0
 flake8>=5.0.0
-
-# Deployment
 gunicorn>=20.1.0
-
-fastapi>=0.85.0
-uvicorn[standard]>=0.18.0
-python-multipart>=0.0.5
-requests>=2.28.0
