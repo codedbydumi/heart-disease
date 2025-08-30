@@ -1,5 +1,4 @@
 services:
-  # FastAPI Backend
   api:
     build:
       context: .
@@ -23,7 +22,6 @@ services:
       timeout: 10s
       retries: 3
 
-  # Streamlit Dashboard
   dashboard:
     build:
       context: .
