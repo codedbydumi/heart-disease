@@ -1,28 +1,36 @@
-# Use Python 3.9 slim image (smaller, faster)
+# Dockerfile.api
 FROM python:3.9-slim
 
-# Set working directory inside container
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies for Python packages
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \
+    gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (Docker caching optimization)
+# Copy requirements first (for better caching)
 COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy source code
+COPY src/ ./src/
+COPY models/ ./models/
+COPY data/ ./data/
+COPY .env ./
 
-# Create directories for data and logs
-RUN mkdir -p data/raw data/processed models/trained_models models/scalers logs
+# Create necessary directories
+RUN mkdir -p logs
 
-# Expose port 8000 (where FastAPI runs)
+# Expose port
 EXPOSE 8000
 
-# Command to run when container starts
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run API server
 CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
