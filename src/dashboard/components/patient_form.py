@@ -1,4 +1,4 @@
-"""Patient input form component."""
+"""Patient input form component with Docker support."""
 
 import streamlit as st
 from typing import Dict, Any, Optional, List
@@ -28,7 +28,7 @@ def render_patient_form() -> Optional[Dict[str, Any]]:
         
         form_data = {}
         
-        # Age and Sex
+        # Left column
         with col1:
             form_data["age"] = st.number_input(
                 **FORM_FIELDS["age"]
@@ -66,6 +66,7 @@ def render_patient_form() -> Optional[Dict[str, Any]]:
                 help=FORM_FIELDS["restecg"]["help"]
             )
         
+        # Right column
         with col2:
             form_data["thalach"] = st.number_input(
                 **FORM_FIELDS["thalach"]
