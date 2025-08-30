@@ -1,4 +1,4 @@
-"""Main Streamlit dashboard application."""
+"""Main Streamlit dashboard application with Docker support."""
 
 import streamlit as st
 from datetime import datetime
@@ -6,17 +6,14 @@ import sys
 import os
 from pathlib import Path
 
-
-
 # Add project root to path and set working directory
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 os.chdir(project_root)
 
-
-# Now import with absolute imports
-from src.dashboard.config import DASHBOARD_CONFIG, get_custom_css
-from src.dashboard.utils import make_api_request, convert_form_data_to_api, check_api_health
+# Import with absolute imports
+from src.dashboard.config import DASHBOARD_CONFIG, get_custom_css, get_debug_info
+from src.dashboard.utils import make_api_request, convert_form_data_to_api, check_api_health, get_system_info
 from src.dashboard.components.patient_form import render_patient_form
 from src.dashboard.components.results_display import render_prediction_results
 from src.dashboard.pages.batch_processing import render_batch_processing_page
@@ -52,21 +49,41 @@ def main():
             key="page_selection"
         )
         
-        # API status check
+        # System Status
         st.markdown("---")
         st.markdown("### 🔧 System Status")
+        
+        # Get system info
+        system_info = get_system_info()
+        st.markdown(f"**API URL:** `{system_info['api_base_url']}`")
+        
+        if system_info["docker_mode"]:
+            st.info("🐳 Running in Docker")
+        else:
+            st.info("💻 Running locally")
         
         if check_api_health():
             st.success("✅ API Connected")
         else:
             st.error("❌ API Disconnected")
-            st.warning("Please ensure the API server is running on http://localhost:8000")
+            if not system_info["docker_mode"]:
+                st.warning("Start API: `python scripts/start_api.py`")
+            else:
+                st.warning("Check Docker containers")
         
-        # Quick stats (if available)
+        # Model Information
         st.markdown("---")
-        st.markdown("### 📈 Quick Stats")
-        st.info("Assessments today: 0")  # Placeholder
-        st.info("Model accuracy: 89.5%")
+        st.markdown("### 📈 Model Info")
+        st.info("• Algorithm: Ensemble ML")
+        st.info("• Accuracy: 86.89%")
+        st.info("• Features: 20 engineered")
+        
+        # Debug info (only show if needed)
+        debug_info = get_debug_info()
+        if debug_info.get("docker_mode"):
+            st.markdown("---")
+            st.markdown("### 🔍 Debug Info")
+            st.code(f"Environment: {debug_info['environment']}")
         
         # Footer
         st.markdown("---")
@@ -94,8 +111,15 @@ def render_risk_calculator_page():
     
     # Check API health
     if not check_api_health():
-        st.error("🚫 API server is not responding. Please start the API server first.")
-        st.code("python scripts/start_api.py")
+        st.error("🚫 API server is not responding.")
+        system_info = get_system_info()
+        
+        if not system_info["docker_mode"]:
+            st.code("python scripts/start_api.py")
+        else:
+            st.code("docker-compose up -d")
+            
+        st.info("The API must be running for predictions to work.")
         return
     
     # Patient form
@@ -108,7 +132,7 @@ def render_risk_calculator_page():
         # Make prediction request
         with st.spinner("🔬 Analyzing patient data..."):
             success, response = make_api_request(
-                "http://localhost:8000/predict",
+                get_system_info()["endpoints"]["predict"],
                 method="POST",
                 data=api_data
             )
@@ -146,9 +170,10 @@ def render_about_page():
         st.markdown("""
         #### 🤖 Machine Learning Model
         - **Algorithm**: Ensemble (Random Forest + XGBoost + Logistic Regression)
-        - **Accuracy**: 89.5%
+        - **Accuracy**: 86.89%
         - **Features**: 20 engineered features
-        - **Training Data**: UCI Heart Disease Dataset
+        - **Training Data**: UCI Heart Disease Dataset (303 patients)
+        - **Performance**: AUC-ROC 95.35%
         """)
     
     with col2:
@@ -193,6 +218,40 @@ def render_about_page():
         </div>
         """, unsafe_allow_html=True)
     
+    # System Architecture
+    st.markdown("### 🏗️ System Architecture")
+    
+    system_info = get_system_info()
+    
+    arch_col1, arch_col2 = st.columns(2)
+    
+    with arch_col1:
+        st.markdown("""
+        #### Frontend
+        - **Framework**: Streamlit with custom CSS
+        - **Visualization**: Plotly interactive charts
+        - **Forms**: Professional medical styling
+        - **Responsive**: Works on mobile/tablet
+        """)
+    
+    with arch_col2:
+        st.markdown("""
+        #### Backend
+        - **API**: FastAPI with async support
+        - **ML Pipeline**: scikit-learn ensemble
+        - **Database**: SQLite with proper schema
+        - **Deployment**: Docker containerization
+        """)
+    
+    # Deployment info
+    if system_info["docker_mode"]:
+        st.markdown("### 🐳 Docker Deployment")
+        st.success("This instance is running in Docker containers")
+        st.markdown(f"**API Endpoint**: `{system_info['api_base_url']}`")
+    else:
+        st.markdown("### 💻 Local Development")
+        st.info("This instance is running in local development mode")
+    
     # Disclaimer
     st.markdown("---")
     st.markdown("### ⚠️ Important Medical Disclaimer")
@@ -222,6 +281,7 @@ def render_about_page():
         - Interactive visualizations
         - Export functionality
         - Professional medical styling
+        - Docker support for easy deployment
         """)
 
 
