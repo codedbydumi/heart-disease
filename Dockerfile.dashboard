@@ -17,16 +17,11 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code (including dashboard)
+# Copy source code with complete directory structure
 COPY src/ ./src/
+COPY scripts/ ./scripts/
 COPY models/ ./models/
 COPY data/ ./data/
-
-# Make sure dashboard directory exists and copy dashboard files
-COPY src/dashboard/ ./src/dashboard/
-
-# Copy the dashboard script from correct location
-COPY scripts/start_dashboard.py ./
 
 # Copy environment file
 COPY .env ./
@@ -34,10 +29,12 @@ COPY .env ./
 # Create necessary directories
 RUN mkdir -p logs
 
-# Set Streamlit configuration
+# Set Streamlit and API configuration
 ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_SERVER_PORT=8501
 ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
+ENV API_HOST=0.0.0.0
+ENV API_PORT=8000
 
 # Expose port
 EXPOSE 8501
@@ -47,10 +44,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8501/_stcore/health || exit 1
 
 # Run the dashboard script
-# Choose one of the following based on how your start_dashboard.py works:
-
-# Option 1: If start_dashboard.py runs streamlit internally
-CMD ["python", "start_dashboard.py"]
-
-# Option 2: If start_dashboard.py is the streamlit app file
-# CMD ["streamlit", "run", "start_dashboard.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--server.headless", "true"]
+CMD ["python", "scripts/start_dashboard.py"]
