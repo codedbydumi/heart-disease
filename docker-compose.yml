@@ -6,57 +6,68 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
+    container_name: heart-disease-api
     ports:
       - "8000:8000"
     volumes:
-      # Mount database file so data persists
-      - ./heart_disease.db:/app/heart_disease.db
       - ./models:/app/models
       - ./data:/app/data
       - ./logs:/app/logs
     environment:
       - ENVIRONMENT=production
-      - DATABASE_URL=sqlite:///./heart_disease.db
+      - LOG_LEVEL=INFO
     restart: unless-stopped
     networks:
-      - app-network
+      - heart-disease-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Streamlit Dashboard  
+  # Streamlit Dashboard
   dashboard:
     build:
       context: .
       dockerfile: Dockerfile.dashboard
+    container_name: heart-disease-dashboard
     ports:
       - "8501:8501"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     environment:
-      - API_URL=http://api:8000
+      - API_BASE_URL=http://api:8000
     restart: unless-stopped
     networks:
-      - app-network
+      - heart-disease-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
+    container_name: heart-disease-nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/ssl:/etc/nginx/ssl
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
     depends_on:
       - api
       - dashboard
     restart: unless-stopped
     networks:
-      - app-network
+      - heart-disease-network
 
 networks:
-  app-network:
+  heart-disease-network:
     driver: bridge
 
-# Volumes for persistent data
 volumes:
-  app-data:
+  heart_disease_data:
+    driver: local
