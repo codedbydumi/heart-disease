@@ -30,7 +30,7 @@ def make_api_request(endpoint: str, method: str = "GET", data: Optional[Dict] = 
     """
     try:
         # Debug logging
-        st.sidebar.info(f"Connecting to: {endpoint}")
+        
         
         if method == "GET":
             response = requests.get(endpoint, timeout=30)

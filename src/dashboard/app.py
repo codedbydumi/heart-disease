@@ -64,6 +64,10 @@ def main():
         st.markdown("### 📈 Model Info")
         st.info("• Algorithm: Logistic Regression")
         st.info("• Accuracy: 86.89%")
+        st.info("• Precision: 81.25%")
+        st.info("• Recall: 92.86%")
+        st.info("• F1-Score: 86.67%")
+        st.info("• AUC-ROC: 95.35%")
         st.info("• Features: 20 engineered")
         
         # Footer
