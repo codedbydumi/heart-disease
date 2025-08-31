@@ -1,4 +1,4 @@
-"""Script to start the Streamlit dashboard."""
+"""Script to start the Streamlit dashboard for Railway deployment."""
 
 import sys
 import os
@@ -14,28 +14,28 @@ from src.utils.logger import get_logger
 
 logger = get_logger("dashboard_server")
 
-
 def start_dashboard():
-    """Start the Streamlit dashboard."""
-    logger.info("Starting Heart Disease Risk Assessment Dashboard...")
+    """Start the Streamlit dashboard with Railway configuration."""
+    # Railway provides PORT environment variable
+    port = int(os.environ.get("PORT", 8501))
+    
+    logger.info(f"Starting Heart Disease Risk Assessment Dashboard on port {port}")
     
     try:
-        # Start Streamlit app
+        # Start Streamlit app with Railway-compatible settings
         subprocess.run([
             "streamlit", "run", 
-            "src/dashboard/app.py",
-            "--server.port", "8501",
+            "simple_dashboard.py",  # Use your working simple dashboard
+            "--server.port", str(port),
             "--server.address", "0.0.0.0",
-            "--theme.base", "light",
-            "--theme.primaryColor", "#2E86AB",
-            "--theme.backgroundColor", "#f8f9fa",
-            "--theme.secondaryBackgroundColor", "#ffffff"
+            "--server.headless", "true",
+            "--server.enableCORS", "false",
+            "--server.enableXsrfProtection", "false"
         ])
         
     except Exception as e:
         logger.error(f"Failed to start dashboard: {e}")
         raise
-
 
 if __name__ == "__main__":
     start_dashboard()
