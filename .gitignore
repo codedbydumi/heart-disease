@@ -52,12 +52,6 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Virtual environments
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
 
 # IDEs and editors
 .vscode/
@@ -77,9 +71,14 @@ Thumbs.db
 
 # Environment variables
 .env
-.env.local
-.env.production
-.env.staging
+
+
+# Virtual environments
+
+env/
+ENV/
+env.bak/
+venv.bak/
 
 # Logs
 logs/
