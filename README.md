@@ -161,24 +161,24 @@ graph TB
 
 ```
 heart-disease-prediction/
-├── 📄 README.md                    # Project documentation
+├── 📄 README.md                   # Project documentation
 ├── 🐳 docker-compose.yml          # Multi-service orchestration
 ├── 🐳 Dockerfile.api              # API container definition
 ├── 🐳 Dockerfile.dashboard        # Dashboard container definition
 ├── ⚙️ nginx.conf                  # Reverse proxy configuration
 ├── 📦 requirements.txt            # Python dependencies
-├── 📊 start_dashboard.py         # Streamlit application or scripts/start_dashboard.py
+├── 📊 start_dashboard.py          # Streamlit application or scripts/start_dashboard.py
 │
 ├── 📁 src/                        # Source code
 │   ├── 🔧 api/                    # FastAPI backend
-│   │   ├── main.py                # API entry point
-│   │   ├── prediction_service.py  # ML prediction service
-│   │   └── schemas.py             # Pydantic models
+│   │   ├── main.py                 # API entry point
+│   │   ├── prediction_service.py   # ML prediction service
+│   │   └── schemas.py              # Pydantic models
 │   ├── 📊 data/                   # Data processing
 │   │   ├── data_loader.py         # Data loading utilities
 │   │   ├── preprocessing.py       # Feature engineering
 │   │   └── validation.py          # Data validation
-│   ├── 🤖 models/                 # ML model management
+│   ├── 🤖 models/                # ML model management
 │   │   ├── model_trainer.py       # Training pipeline
 │   │   └── ensemble_model.py      # Ensemble implementation
 │   ├── 🖥️ dashboard/              # Streamlit components
