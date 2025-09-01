@@ -1,4 +1,7 @@
+version: '3.8'
+
 services:
+  # FastAPI Backend
   api:
     build:
       context: .
@@ -22,6 +25,7 @@ services:
       timeout: 10s
       retries: 3
 
+  # Streamlit Dashboard
   dashboard:
     build:
       context: .
@@ -34,8 +38,6 @@ services:
         condition: service_healthy
     environment:
       - API_BASE_URL=http://api:8000
-    volumes:
-      - ./logs:/app/logs
     restart: unless-stopped
     networks:
       - heart-disease-network
@@ -45,6 +47,27 @@ services:
       timeout: 10s
       retries: 3
 
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: heart-disease-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - api
+      - dashboard
+    restart: unless-stopped
+    networks:
+      - heart-disease-network
+
 networks:
   heart-disease-network:
     driver: bridge
+
+volumes:
+  heart_disease_data:
+    driver: local
