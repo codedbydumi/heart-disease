@@ -71,7 +71,14 @@ Thumbs.db
 
 # Environment variables
 .env
+.env.example
+.env production
 
+new
+env.yml
+ngix
+.dockerignore
+.gitignore
 
 # Virtual environments
 
