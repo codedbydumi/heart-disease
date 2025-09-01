@@ -245,7 +245,7 @@ Content-Type: application/json
 ```
 
 #### 📖 Interactive Documentation
-Visit: https://heartdisease.duminduthushan.com/docs
+
 
 ## 📊 Clinical Parameters
 
