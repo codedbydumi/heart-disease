@@ -80,7 +80,7 @@ env.yml
 ngix
 heart-disease.csv
 
-env.yml
+ignore for now
 
 .dockerignore
 .gitignore
