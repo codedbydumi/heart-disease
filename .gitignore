@@ -1,3 +1,5 @@
+# Heart Disease Risk Assessment System - .gitignore
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -35,9 +37,6 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-new
-new.zip
-
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -52,80 +51,70 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# Translations
+*.mo
+*.pot
 
-# IDEs and editors
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS specific files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Environment variables
-.env
-.env.example
-.env production
-
-new
-env.yml
-ngix
-.dockerignore
-.gitignore
-
-# Virtual environments
-
-env/
-ENV/
-env.bak/
-venv.bak/
-
-# Logs
-logs/
+# Django stuff
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
 
-# Database
-*.db
-*.sqlite3
+# Flask stuff
+instance/
+.webassets-cache
 
-# Trained models (large files)
-models/trained_models/*.pkl
-models/trained_models/*.joblib
-models/trained_models/*.h5
-models/scalers/*.pkl
-models/scalers/*.joblib
+# Scrapy stuff
+.scrapy
 
-# Data files (privacy and size)
-data/raw/*.csv
-data/processed/*.csv
-data/external/*.csv
-!data/raw/.gitkeep
-!data/processed/.gitkeep
+# Sphinx documentation
+docs/_build/
 
-# Docker
-.dockerignore
+# PyBuilder
+target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# PyCharm
-.idea/
+# IPython
+profile_default/
+ipython_config.py
 
-# Spyder
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Spyder project settings
 .spyderproject
 .spyproject
 
-# Rope
+# Rope project settings
 .ropeproject
 
 # mkdocs documentation
@@ -136,15 +125,125 @@ data/external/*.csv
 .dmypy.json
 dmypy.json
 
-# SSL certificates
-deployment/ssl/*.pem
-deployment/ssl/*.key
-deployment/ssl/*.crt
+# Pyre type checker
+.pyre/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Machine Learning & Data Science specific
+# Trained models (can be large)
+models/trained_models/*.pkl
+models/trained_models/*.joblib
+models/trained_models/*.h5
+models/trained_models/*.model
+models/trained_models/*.sav
+models/scalers/*.pkl
+models/scalers/*.joblib
+models/checkpoints/
+
+# Keep directory structure but ignore contents
+!models/trained_models/.gitkeep
+!models/scalers/.gitkeep
+!models/checkpoints/.gitkeep
+
+# Data files (for privacy and size management)
+data/raw/*.csv
+data/processed/*.csv
+data/external/*.csv
+data/temp/
+data/cache/
+
+# Keep directory structure
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/external/.gitkeep
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
 
 # Backup files
 *.bak
 *.backup
+*.orig
 
 # Temporary files
 *.tmp
 *.temp
+temp/
+tmp/
+
+# Docker
+.dockerignore
+
+# SSL certificates and sensitive config
+deployment/ssl/*.pem
+deployment/ssl/*.key
+deployment/ssl/*.crt
+config/secrets.yml
+config/database.yml
+secrets/
+
+# Jupyter notebook outputs (optional - remove if you want to track outputs)
+*.ipynb
+
+# Python packaging
+*.whl
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Pytest
+.pytest_cache/
+
+# Node.js (if using any JS tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Research and experimentation
+experiments/
+notebooks/scratch/
+research/
+drafts/
+
+# Large files that shouldn't be in Git
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# API keys and secrets
+.secrets
+api_keys.txt
+credentials.json
+new
