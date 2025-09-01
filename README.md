@@ -167,7 +167,7 @@ heart-disease-prediction/
 ├── 🐳 Dockerfile.dashboard        # Dashboard container definition
 ├── ⚙️ nginx.conf                  # Reverse proxy configuration
 ├── 📦 requirements.txt            # Python dependencies
-├── 📊 simple_dashboard.py         # Streamlit application
+├── 📊 start_dashboard.py         # Streamlit application or scripts/start_dashboard.py
 │
 ├── 📁 src/                        # Source code
 │   ├── 🔧 api/                    # FastAPI backend
@@ -196,7 +196,7 @@ heart-disease-prediction/
 │
 ├── 🧪 tests/                      # Test suites
 ├── 📜 scripts/                    # Automation scripts
-└── 📚 docs/                       # Documentation
+└── 📚 docs/                       # Documentation (User Guide And other data)
 ```
 
 ## 🎮 API Documentation
@@ -413,12 +413,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 👨‍💻 Developer
 - **Name**: Duminda Thushan
 - **Portfolio**: https://duminduthushan.com
-- **LinkedIn**: [Connect on LinkedIn](https://linkedin.com/in/duminduthushan)
-- **Email**: contact@duminduthushan.com
+- **LinkedIn**: [Connect on LinkedIn](https://linkedin.com/in/dumindu-thushan)
+- **Email**: duminduthushan9@gmail.com
 
 ### 🔗 Project Links
 - **Live Demo**: https://heartdisease.duminduthushan.com/
-- **API Documentation**: https://heartdisease.duminduthushan.com/docs
+- **API Documentation**: https://......./docs
 - **Source Code**: https://github.com/duminduthushan/heart-disease-prediction
 - **Issue Tracker**: https://github.com/duminduthushan/heart-disease-prediction/issues
 
@@ -431,7 +431,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <h3>🫀 Built with ❤️ for Better Healthcare</h3>
+  <h3>🫀 Built with  ❤️  *DT* for Better Healthcare</h3>
   <p>Empowering healthcare professionals with AI-driven insights for cardiovascular risk assessment.</p>
   
   [![Made with Python](https://img.shields.io/badge/Made%20with-Python-blue?style=for-the-badge&logo=python)](https://python.org)
