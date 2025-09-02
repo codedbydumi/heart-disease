@@ -72,7 +72,7 @@ pip install -r requirements.txt
 # Start services
 python scripts/train_model.py    # Train ML models
 python scripts/start_api.py      # Start API server
-streamlit run simple_dashboard.py # Start dashboard
+streamlit run scripts/start_dashboard.py # Start dashboard
 ```
 
 ### 🐳 Docker Deployment
