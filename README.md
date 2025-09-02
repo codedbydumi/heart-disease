@@ -419,7 +419,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 🔗 Project Links
 - **Live Demo**: https://heartdisease.duminduthushan.com/
 - **API Documentation**: https://......./docs
-- **Source Code**: https://github.com/duminduthushan/heart-disease-prediction//tree/main/src
+- **Source Code**: https://github.com/codedbydumi/heart-disease/tree/main/src
 - **Issue Tracker**: https://github.com/codedbydumi/heart-disease/issues
 
 ### 📈 Project Status
@@ -431,10 +431,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <h3>🫀 Built with  ❤️  Codedbydumi for Better Healthcare</h3>
+  <h3>🫀 Built with ❤️ by Codedbydumi for Better Healthcare</h3>
   <p>Empowering healthcare professionals with AI-driven insights for cardiovascular risk assessment.</p>
   
   [![Made with Python](https://img.shields.io/badge/Made%20with-Python-blue?style=for-the-badge&logo=python)](https://python.org)
-  [![Powered by ML](https://img.shields.io/badge/Powered%20by-Machine%20Learning-green?style=for-the-badge&logo=tensorflow)](https://scikit-learn.org)
+  [![Powered by ML](https://img.shields.io/badge/Powered%20by-Machine%20Learning-green?style=for-the-badge&logo=scikitlearn)](https://scikit-learn.org)
   [![Deployed with Docker](https://img.shields.io/badge/Deployed%20with-Docker-blue?style=for-the-badge&logo=docker)](https://docker.com)
 </div>
