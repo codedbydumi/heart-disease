@@ -419,7 +419,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### 🔗 Project Links
 - **Live Demo**: https://heartdisease.duminduthushan.com/
 - **API Documentation**: https://......./docs
-- **Source Code**: https://github.com/duminduthushan/heart-disease-prediction/src
+- **Source Code**: https://github.com/duminduthushan/heart-disease-prediction//tree/main/src
 - **Issue Tracker**: https://github.com/duminduthushan/heart-disease-prediction/issues
 
 ### 📈 Project Status
