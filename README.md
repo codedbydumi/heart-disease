@@ -418,7 +418,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### 🔗 Project Links
 - **Live Demo**: https://heartdisease.duminduthushan.com/
-- **API Documentation**: https://_______________/docs
+- **API Documentation**: https://._______________./docs
 - **Source Code**: https://github.com/codedbydumi/heart-disease/tree/main/src
 - **Issue Tracker**: https://github.com/codedbydumi/heart-disease/issues
 
