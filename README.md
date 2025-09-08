@@ -431,7 +431,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <h3>🫀 Built with  ❤️  *DT* for Better Healthcare</h3>
+  <h3>🫀 Built with  ❤️ by  codedbydumi for Better Healthcare</h3>
   <p>Empowering healthcare professionals with AI-driven insights for cardiovascular risk assessment.</p>
   
   [![Made with Python](https://img.shields.io/badge/Made%20with-Python-blue?style=for-the-badge&logo=python)](https://python.org)
